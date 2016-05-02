@@ -20,7 +20,7 @@ if ($command eq 'search') {
 	$results = 0;
 	open(TAGDB, ".ptagdb") || die "Could not open ptag database. Does it even exist?\n";
 	while ($line = <TAGDB>) {
-		($file_name, $raw_tag_list) = $line =~ /(.+) (.+)/;
+		($file_name, $raw_tag_list) = $line =~ /(.+)\s*=\s*(.+)/;
 		@file_tags = split(',', $raw_tag_list);
 
 		for ($i = 0; $i < (scalar @tag_criteria); $i++) {
@@ -47,3 +47,30 @@ if ($command eq 'search') {
 
 	print "$results results.\n";
 }
+
+if ($command eq 'newdb') {
+	@files = <*>;
+
+	open(TAGDB, '>>', ".ptagdb") || die "Failed to open .ptagdb.\n";
+
+	print "Will create a new database " . (scalar @files) . " files:\n";
+	for $file (@files) {
+		# We don't care to tag directories...
+		next if (-d $file);
+			
+		$file_tags = "";
+
+		while ($file_tags eq "") {
+			print "Tags for " . $file . ":\n";
+			$file_tags = <STDIN>;
+			chomp $file_tags
+		}
+		print "\n";
+
+		print TAGDB "$file = $file_tags\n";
+	}
+
+	print "Done!\n";
+}
+
+exit 0;
