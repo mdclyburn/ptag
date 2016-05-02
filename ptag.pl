@@ -9,6 +9,12 @@
 
 die "Unrecognized command. Please use 'ptag help'\n" if (scalar @ARGV < 1);
 
+$db_open = 0;
+$SIG{INT} = sub {
+	close(TAGDB) if ($db_open == 1);
+	exit 0;
+};
+
 $command = $ARGV[0];
 if ($command eq 'search') {
 	die "No tags provided.\n" if (scalar @ARGV < 2);
@@ -19,6 +25,7 @@ if ($command eq 'search') {
 	# Read database and find tags.
 	$results = 0;
 	open(TAGDB, ".ptagdb") || die "Could not open ptag database. Does it even exist?\n";
+	$db_open = 1;
 	while ($line = <TAGDB>) {
 		($file_name, $raw_tag_list) = $line =~ /(.+)\s*=\s*(.+)/;
 		@file_tags = split(',', $raw_tag_list);
@@ -52,6 +59,7 @@ if ($command eq 'newdb') {
 	@files = <*>;
 
 	open(TAGDB, '>>', ".ptagdb") || die "Failed to open .ptagdb.\n";
+	$db_open = 1;
 
 	print "Will create a new database " . (scalar @files) . " files:\n";
 	for $file (@files) {
