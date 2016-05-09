@@ -56,6 +56,13 @@ if ($command eq 'search') {
 }
 
 if ($command eq 'newdb') {
+	# See which files are already inputted.
+	open(TAGDB, ".ptagdb") || die "Failed to open .ptagdb.\n";
+	while ($line = <TAGDB>) {
+		($file_name) = $line =~ /^(.+) =/;
+		$already_tagged{$file_name} = 1;
+	}
+
 	@files = <*>;
 
 	open(TAGDB, '>>', ".ptagdb") || die "Failed to open .ptagdb.\n";
@@ -65,6 +72,9 @@ if ($command eq 'newdb') {
 	for $file (@files) {
 		# We don't care to tag directories...
 		next if (-d $file);
+
+		# Skip if this file has already been tagged.
+		next if (defined $already_tagged{$file});
 			
 		$file_tags = "";
 
@@ -79,6 +89,72 @@ if ($command eq 'newdb') {
 	}
 
 	print "Done!\n";
+}
+
+if ($command eq 'organize') {
+	organize();
+}
+
+if ($command eq 'update') {
+	update();
+}
+
+# Open the database.
+sub get_db_entries {
+	open(TAGDB, '.ptagdb') || die "Failed to open .ptagdb.";
+	while (my $line = <TAGDB>) {
+		chomp $line;
+
+		(my $file_name, my $tag_list) = $line =~ /(.+)\s*=\s*(.+)/;
+		$file_name =~ s/\s+$//;
+
+		# Place into hash.
+		$ptagdb{$file_name} = $tag_list;
+	}
+	close(TAGDB);
+
+	return %ptagdb;
+}
+
+# Sort the tag list of .ptagdb
+sub organize {
+	%ptagdb = get_db_entries();
+
+	# Sort and write back out.
+	open(TAGDB, '>', '.ptagdb') || die "Failed to open .ptagdb.";
+	for $key (sort(keys(%ptagdb))) {
+		print TAGDB "$key = $ptagdb{$key}\n";
+	}
+	close(TAGDB);
+
+	return;
+}
+
+# Find and add new entries to the database.
+sub update {
+	%ptagdb = get_db_entries();
+
+	open(TAGDB, '>>', '.ptagdb') || die "Failed to open .ptagdb.";
+
+	@files = <*>;
+	for $file_name (@files) {
+		# We don't care about directories.
+		# We don't care about entries already present.
+		if (-d $file_name || defined $ptagdb{$file_name}) {
+			next;
+		}
+
+		$file_tags = "";
+		while ($file_tags eq "") {
+			print "Tags for " . $file_name . ":\n";
+			$file_tags = <STDIN>;
+			chomp $file_tags
+		}
+		print "\n";
+		print TAGDB "$file_name = $file_tags\n";
+	}
+
+	close(TAGDB);
 }
 
 exit 0;
