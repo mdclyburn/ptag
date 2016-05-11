@@ -56,12 +56,6 @@ if ($command eq 'search') {
 }
 
 if ($command eq 'newdb') {
-	# See which files are already inputted.
-	open(TAGDB, ".ptagdb") || die "Failed to open .ptagdb.\n";
-	while ($line = <TAGDB>) {
-		($file_name) = $line =~ /^(.+) =/;
-		$already_tagged{$file_name} = 1;
-	}
 
 	@files = <*>;
 
@@ -73,11 +67,8 @@ if ($command eq 'newdb') {
 		# We don't care to tag directories...
 		next if (-d $file);
 
-		# Skip if this file has already been tagged.
-		next if (defined $already_tagged{$file});
-			
+		# Ask for tags until we get them.
 		$file_tags = "";
-
 		while ($file_tags eq "") {
 			print "Tags for " . $file . ":\n";
 			$file_tags = <STDIN>;
@@ -99,7 +90,11 @@ if ($command eq 'update') {
 	update();
 }
 
-# Open the database.
+# Read entries from the ptag file.
+#
+# Returns a hash of the entries in the ptag database. File names are keys
+# and their associated tag list is their value. The .ptagdb file is opened
+# and read, then closed.
 sub get_db_entries {
 	open(TAGDB, '.ptagdb') || die "Failed to open .ptagdb.";
 	while (my $line = <TAGDB>) {
@@ -116,25 +111,36 @@ sub get_db_entries {
 	return %ptagdb;
 }
 
-# Sort the tag list of .ptagdb
+# Sort the ptag file.
+#
+# Opens the .ptagdb file and reads the entries. It this writes these entries
+# back out the file in alphabetical order by file name.
 sub organize {
 	%ptagdb = get_db_entries();
 
 	# Sort and write back out.
 	open(TAGDB, '>', '.ptagdb') || die "Failed to open .ptagdb.";
+	$db_open = 1;
 	for $key (sort(keys(%ptagdb))) {
 		print TAGDB "$key = $ptagdb{$key}\n";
 	}
 	close(TAGDB);
+	$db_open = 0;
 
 	return;
 }
 
-# Find and add new entries to the database.
+# Prompts to add tags for new files.
+#
+# Reads the database and looks for new files in the directory to add. If
+# a file is found that is not in the database, a prompt appears for it.
+# Providing no input will cause it to continue to prompt for the same file
+# until at least one tag is provided.
 sub update {
 	%ptagdb = get_db_entries();
 
 	open(TAGDB, '>>', '.ptagdb') || die "Failed to open .ptagdb.";
+	$db_open = 1;
 
 	@files = <*>;
 	for $file_name (@files) {
@@ -155,6 +161,7 @@ sub update {
 	}
 
 	close(TAGDB);
+	$db_open = 0;
 }
 
 exit 0;
