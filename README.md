@@ -20,6 +20,7 @@ Ptag has a set of subcommands that make things work. The script looks for a file
 
 #### Searching
 You can search with `ptag search <tag list>`.
+This is the only command that takes an argument.
 If the database has the entry `myfile.gif = funny,cat`, then the following queries will return at least this file:
 
 * `ptag search funny`
