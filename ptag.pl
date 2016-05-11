@@ -162,6 +162,8 @@ sub update {
 
 	close(TAGDB);
 	$db_open = 0;
+
+	print "Nothing else new!\n";
 }
 
 exit 0;
