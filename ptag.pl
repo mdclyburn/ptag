@@ -2,9 +2,8 @@
 
 # ptag - Write psuedo-tags for files in a directory.
 #
-# Usage: ptag command
+# Usage: ptag < newdb | organize | search | update >
 #
-#        ptag tag <file> tag,tag,tag,tag
 #
 
 die "Unrecognized command. Please use 'ptag help'\n" if (scalar @ARGV < 1);
