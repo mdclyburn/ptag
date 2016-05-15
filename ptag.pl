@@ -19,7 +19,6 @@ if ($command eq 'search') {
 	die "No tags provided.\n" if (scalar @ARGV < 2);
 
 	@tag_criteria = split(',', $ARGV[1]);
-	print "Searching...\n";
 
 	# Read database and find tags.
 	$results = 0;
@@ -50,8 +49,6 @@ if ($command eq 'search') {
 			}
 		}
 	}
-
-	print "$results results.\n";
 }
 
 if ($command eq 'newdb') {
